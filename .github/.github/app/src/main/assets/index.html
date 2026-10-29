@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ps" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculator</title>
+<style>
+:root{--bg:#f2f2f4;--disp:#111;--btn:#fff;--btn-t:#111;--op:#ff9500;--op-t:#fff;--fn:#d8d8dc}
+@media (prefers-color-scheme:dark){:root{--bg:#111;--disp:#fff;--btn:#2b2b2e;--btn-t:#fff;--fn:#4a4a4f}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);font-family:system-ui,sans-serif;display:flex;flex-direction:column;max-width:480px;margin:0 auto;padding:12px}
+#out{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;padding:12px 8px;color:var(--disp);overflow:hidden}
+#hist{font-size:1.2rem;opacity:.55;min-height:1.6rem}
+#val{font-size:4rem;font-weight:300;line-height:1.1;max-width:100%;overflow-x:auto;white-space:nowrap}
+#pad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding-top:8px}
+button{height:clamp(56px,10vh,80px);border:0;border-radius:22px;font-size:1.7rem;background:var(--btn);color:var(--btn-t)}
+button:active{filter:brightness(.85)}
+.fn{background:var(--fn)}.op{background:var(--op);color:var(--op-t)}
+</style>
+</head>
+<body>
+<div id="out"><div id="hist"></div><div id="val">0</div></div>
+<div id="pad"></div>
+<script>
+var keys=[["AC","fn"],["⌫","fn"],["%","fn"],["÷","op"],["7"],["8"],["9"],["×","op"],["4"],["5"],["6"],["−","op"],["1"],["2"],["3"],["+","op"],["±","fn"],["0"],[".",""],["=","op"]];
+var cur="0",prev=null,op=null,fresh=false,pad=document.getElementById("pad"),val=document.getElementById("val"),hist=document.getElementById("hist");
+keys.forEach(function(k){var b=document.createElement("button");b.textContent=k[0];b.className=k[1]||"";b.onclick=function(){press(k[0])};pad.appendChild(b)});
+function fmt(n){if(!isFinite(n))return "Error";var r=Math.round(n*1e10)/1e10;var s=String(r);if(s.length>14)s=r.toPrecision(10).replace(/\.?0+$/,"");return s}
+function calc(a,b,o){a=parseFloat(a);b=parseFloat(b);if(o==="+")return a+b;if(o==="−")return a-b;if(o==="×")return a*b;if(o==="÷")return b===0?NaN:a/b;return b}
+function show(){val.textContent=cur;}
+function press(k){
+ if(/^[0-9]$/.test(k)){if(fresh||cur==="0"||cur==="Error"){cur=k;fresh=false}else if(cur.length<15)cur+=k}
+ else if(k==="."){if(fresh||cur==="Error"){cur="0.";fresh=false}else if(cur.indexOf(".")<0)cur+="."}
+ else if(k==="AC"){cur="0";prev=null;op=null;fresh=false;hist.textContent=""}
+ else if(k==="⌫"){if(!fresh&&cur!=="Error")cur=cur.length>1&&!(cur.length===2&&cur[0]==="-")?cur.slice(0,-1):"0"}
+ else if(k==="±"){if(cur!=="0"&&cur!=="Error")cur=cur[0]==="-"?cur.slice(1):"-"+cur}
+ else if(k==="%"){if(cur!=="Error"){cur=fmt(parseFloat(cur)/100);fresh=true}}
+ else if(k==="="){if(op!==null&&prev!==null){var r=calc(prev,cur,op);hist.textContent=prev+" "+op+" "+cur+" =";cur=fmt(r);prev=null;op=null;fresh=true}}
+ else{ if(cur==="Error")return; if(op!==null&&prev!==null&&!fresh){cur=fmt(calc(prev,cur,op))}
+  prev=cur;op=k;fresh=true;hist.textContent=prev+" "+op}
+ show();
+}
+</script>
+</body>
+</html>
